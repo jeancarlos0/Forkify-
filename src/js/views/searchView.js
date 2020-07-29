@@ -9,6 +9,7 @@ export const clearInput = () => {
 
 export const clearResults = () =>{
     elements.searchResList.innerHTML = "";
+    elements.searchResPages.innerHTML = "";
 }
 
 //Default parameter a ser usado caso nenhum parametro seja passado
@@ -40,7 +41,47 @@ const renderRecipe = recipe => {
     elements.searchResList.insertAdjacentHTML("beforeend", markup);
 
 }
-export const renderResults = recipes =>{
-    //The current element is passed to the renderRecipe function
-    recipes.forEach(renderRecipe);
+
+//Create the next and previous page button based on the parameters passed
+const createButton = (page, type) => `
+    <button class="btn-inline results__btn--${type}" data-goto = ${type === 'prev' ? page - 1: page + 1}>
+        <span>Page ${type === 'prev' ? page - 1: page + 1}</span>    
+        <svg class="search__icon">
+            <use href="img/icons.svg#icon-triangle-${type === 'prev'? 'left': 'right'}"></use>
+        </svg>
+    </button>
+
+`;
+
+const renderButtons = (page, numberOfResults, resultsPerPage) =>{
+    const pages = Math.ceil(numberOfResults / resultsPerPage);
+    let button;
+    if(page === 1 && pages > 1){
+        //In this case we only needd a button to go to the next page 
+        button = createButton(page, 'next');
+    }else if(page < pages){
+        //Both buttons
+        button = `
+            ${createButton(page, 'prev')}
+            ${createButton(page, 'next')}
+        `
+    }else if(page ===  pages && pages > 1){
+        //Here we are in the last page, so we need a button to go back
+        button = createButton(page, 'prev');
+    }
+
+    elements.searchResPages.insertAdjacentHTML('afterbegin', button);
+}
+
+export const renderResults = (recipes, page = 1, resultsPerPage = 10) =>{
+    const start = (page - 1) * resultsPerPage;
+    const end = resultsPerPage * page;
+    /**
+     * Rendering recipes per page
+     * The current element is passed to the renderRecipe function
+    */
+    recipes.slice(start, end).forEach(renderRecipe);
+    //Rendering page buttons
+    renderButtons(page,recipes.length ,resultsPerPage);
+
 }
