@@ -1,4 +1,5 @@
 import Search from './models/Search';
+import Recipe from './models/Recipe';
 import * as searchView from './views/searchView'
 import {elements, renderLoader, clearLoader} from './views/base';
 
@@ -23,18 +24,23 @@ const controlSearch = async() =>{
         state.search = new Search(query);
 
         renderLoader(elements.searchRes);
-
-        await state.search.getResults();
-
         //Clear the elements before insert the new data
-        
+            
         searchView.clearInput();
 
         searchView.clearResults();
 
-        clearLoader();
+        try {
+             await state.search.getResults();
+             clearLoader();
+             searchView.renderResults(state.search.result);
+            
+        } catch (error) {
+            alert("Sometrhing went wrong...");
+            clearLoader();
+        }
 
-        searchView.renderResults(state.search.result);
+        
 
     }
 };
@@ -54,4 +60,36 @@ elements.searchResPages.addEventListener('click', e =>{
     }
 });
 
+/** RECIPE CONTROLLER */
+
+const controlRecipe = async () => {
+
+    //Pega apenas o hash da url e retira o simbolo de '#' da string
+    const id = window.location.hash.replace('#', '');
+
+    if(id){
+
+        state.recipe = new Recipe(id);
+
+
+        try {
+            await state.recipe.getRecipe();
+
+            state.recipe.calcTime();
+            state.recipe.calcServings();
+    
+            console.log(state.recipe);   
+
+        } catch (error) {
+            alert('Ooooops, Something went wrong!');
+            console.log(error);
+        }
+
+    }
+
+}
+
+//Ação disparada apenas quando a hash dda url muda
+
+['hashchange', 'load'].forEach(event => window.addEventListener(event, controlRecipe));
 
